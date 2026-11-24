@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Assistant and Admin Job Search</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1c1f26; --muted: #5b6270;
+    --accent: #2563eb; --line: #dfe3ea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161b; --card: #1d2028; --text: #eceef3; --muted: #9ba3b4;
+      --accent: #6ea8ff; --line: #2c313c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 6px; }
+  .muted { color: var(--muted); margin: 0 0 24px; }
+  .search { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type="text"], select {
+    flex: 1 1 260px; padding: 12px 14px; font-size: 1rem;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--card); color: var(--text);
+  }
+  .fresh { display: flex; gap: 6px; align-items: center; margin: 14px 0 0; color: var(--muted); }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .chips button {
+    font: inherit; font-size: 0.9rem; padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer;
+  }
+  .chips button:hover { border-color: var(--accent); }
+  h2 { font-size: 1.05rem; margin: 32px 0 12px; }
+  .board {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 10px;
+  }
+  .board strong { display: block; }
+  .board small { color: var(--muted); }
+  .btn {
+    white-space: nowrap; text-decoration: none; background: var(--accent); border: 0;
+    color: #fff; padding: 9px 16px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .other { display: flex; gap: 8px; align-items: center; }
+  .other select { flex: 1 1 auto; }
+  ul { padding-left: 20px; margin: 0; }
+  li { margin-bottom: 6px; }
+  footer { margin-top: 32px; font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Find VA and admin jobs</h1>
+<p class="muted">Type a job title, then open a board. Each link goes to that site's own search.</p>
+
+<div class="search">
+  <input type="text" id="role" value="virtual assistant" list="suggestions" autocomplete="off" aria-label="Job title">
+  <datalist id="suggestions">
+    <option value="virtual assistant">
+    <option value="data entry">
+    <option value="administrative assistant">
+    <option value="customer support">
+    <option value="legal clerk">
+    <option value="executive assistant">
+    <option value="transcriptionist">
+  </datalist>
+</div>
+
+<label class="fresh">
+  <input type="checkbox" id="fresh" checked>
+  Posted today only (where the site supports it)
+</label>
+
+<div class="chips" id="chips"></div>
+
+<h2>Top job boards</h2>
+<div id="boards"></div>
+
+<h2>Other sites</h2>
+<div class="other">
+  <select id="otherSelect" aria-label="Other sites">
+    <option value="">Choose a site...</option>
+  </select>
+  <button class="btn" id="otherGo" type="button">Open</button>
+</div>
+
+<h2>Before you apply</h2>
+<ul>
+  <li>Never pay a fee to apply, for training, or for equipment.</li>
+  <li>Be cautious if pay is only through a third-party app, or if you're asked to move to Telegram or WhatsApp before a call.</li>
+  <li>Confirm the job is still listed on the board before you apply.</li>
+</ul>
+
+<footer>
+  This page only links to each site's search. It doesn't copy or store any listings.
+</footer>
+
+</main>
+
+<script>
+// Top 3 boards, shown as cards.
+const topBoards = [
+  {
+    name: "Indeed (Philippines)",
+    note: "Last 24 hours when ticked",
+    build: (q, fresh) => `https://ph.indeed.com/jobs?q=${encodeURIComponent(q)}` + (fresh ? "&fromage=1" : "")
+  },
+  {
+    name: "JobStreet (Philippines)",
+    note: "Remote and work from home",
+    build: (q, fresh) => {
+      const slug = q.trim().replace(/\s+/g, "-");
+      return `https://ph.jobstreet.com/${slug}-jobs/in-Philippines/remote?keywords=${encodeURIComponent(q)}&worktype=242%2C243` + (fresh ? "&daterange=1" : "");
+    }
+  },
+  {
+    name: "OnlineJobs.ph",
+    note: "Remote roles, Philippines-focused",
+    build: (q) => `https://www.onlinejobs.ph/jobseekers/jobsearch?jobkeyword=${encodeURIComponent(q)}`
+  }
+];
+
+// Everything else, shown in the dropdown. build() = search link; url = home page.
+const otherSites = [
+  {
+    name: "LinkedIn Jobs",
+    build: (q, fresh) => `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(q + " remote")}` + (fresh ? "&f_TPR=r86400" : "")
+  },
+  {
+    name: "Upwork",
+    build: (q) => `https://www.upwork.com/nx/search/jobs/?q=${encodeURIComponent(q)}`
+  },
+  {
+    name: "Fiverr",
+    url: "https://www.fiverr.com"
+  },
+  {
+    name: "RemoteOK",
+    build: (q) => `https://remoteok.com/remote-${q.trim().replace(/\s+/g, "-")}-jobs`
+  },
+  {
+    name: "WeWorkRemotely",
+    url: "https://weworkremotely.com"
+  },
+  {
+    name: "Remotejobify (remote, hiring in PH)",
+    url: "https://www.remotejobify.com"
+  },
+  {
+    name: "FindRemote.ph",
+    url: "https://findremote.ph"
+  },
+  {
+    name: "Bestjobs.ph",
+    url: "https://www.bestjobs.ph"
+  },
+  {
+    name: "Hubstaff Talent (login required)",
+    url: "https://talent.hubstaff.com"
+  },
+  {
+    name: "Appen (qualification test required)",
+    url: "https://appen.com/careers"
+  },
+  {
+    name: "GoTranscript (transcription, paid per job)",
+    url: "https://gotranscript.com"
+  },
+  {
+    name: "Innodata (data labelling)",
+    url: "https://innodata.com/careers"
+  }
+];
+
+const roleInput = document.getElementById("role");
+const freshBox = document.getElementById("fresh");
+const boardsDiv = document.getElementById("boards");
+const chipsDiv = document.getElementById("chips");
+const otherSelect = document.getElementById("otherSelect");
+const otherGo = document.getElementById("otherGo");
+
+// Quick-pick buttons
+const quick = ["virtual assistant", "data entry", "admin assistant", "customer support"];
+chipsDiv.innerHTML = quick.map(t => `<button type="button" data-role="${t}">${t}</button>`).join("");
+chipsDiv.addEventListener("click", e => {
+  if (e.target.dataset.role) {
+    roleInput.value = e.target.dataset.role;
+    renderAll();
+  }
+});
+
+function currentRole() {
+  return roleInput.value.trim() || "virtual assistant";
+}
+
+function renderBoards() {
+  const q = currentRole();
+  const fresh = freshBox.checked;
+  boardsDiv.innerHTML = topBoards.map((b, i) => `
+    <div class="board">
+      <div><strong>${b.name}</strong><small>${b.note}</small></div>
+      <a class="btn" href="${b.build(q, fresh)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Search</a>
+    </div>`).join("");
+}
+
+// Dropdown options are built once; the URL is resolved when the user clicks Open.
+otherSelect.insertAdjacentHTML("beforeend",
+  otherSites.map((s, i) => `<option value="${i}">${s.name}</option>`).join(""));
+
+otherGo.addEventListener("click", () => {
+  const site = otherSites[otherSelect.value];
+  if (!site) return;
+  const url = site.build ? site.build(currentRole(), freshBox.checked) : site.url;
+  window.open(url, "_blank", "noopener,noreferrer");
+});
+
+function renderAll() { renderBoards(); }
+
+roleInput.addEventListener("input", renderAll);
+freshBox.addEventListener("change", renderAll);
+renderAll();
+</script>
+</body>
+</html>

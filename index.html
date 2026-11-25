@@ -63,7 +63,6 @@
 
 <div class="search">
   <input type="text" id="role" value="virtual assistant" autocomplete="off" aria-label="Job title">
-  
 </div>
 
 <label class="fresh">
@@ -101,34 +100,38 @@
 // Top 3 boards, shown as cards.
 const topBoards = [
   {
+    name: "OnlineJobs.ph",
+    note: "Remote roles, Philippines-focused. Most used for VA work.",
+    build: (q) => `https://www.onlinejobs.ph/jobseekers/jobsearch?jobkeyword=${encodeURIComponent(q)}`
+  },
+  {
     name: "Indeed (Philippines)",
     note: "Last 24 hours when ticked",
     build: (q, fresh) => `https://ph.indeed.com/jobs?q=${encodeURIComponent(q)}` + (fresh ? "&fromage=1" : "")
   },
   {
-    name: "JobStreet (Philippines)",
-    note: "Remote and work from home",
-    build: (q, fresh) => {
-      const slug = q.trim().replace(/\s+/g, "-");
-      return `https://ph.jobstreet.com/${slug}-jobs/in-Philippines/remote?keywords=${encodeURIComponent(q)}&worktype=242%2C243` + (fresh ? "&daterange=1" : "");
-    }
-  },
-  {
-    name: "OnlineJobs.ph",
-    note: "Remote roles, Philippines-focused",
-    build: (q) => `https://www.onlinejobs.ph/jobseekers/jobsearch?jobkeyword=${encodeURIComponent(q)}`
+    name: "Upwork",
+    note: "Freelance clients. Check fees before you bid.",
+    build: (q) => `https://www.upwork.com/nx/search/jobs/?q=${encodeURIComponent(q)}`
   }
 ];
 
 // Everything else, shown in the dropdown. build() = search link; url = home page.
 const otherSites = [
   {
-    name: "LinkedIn Jobs",
-    build: (q, fresh) => `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(q + " remote")}` + (fresh ? "&f_TPR=r86400" : "")
+    name: "JobStreet (Philippines)",
+    build: (q, fresh) => {
+      const slug = q.trim().replace(/\s+/g, "-");
+      return `https://ph.jobstreet.com/${slug}-jobs/in-Philippines/remote?keywords=${encodeURIComponent(q)}&worktype=242%2C243` + (fresh ? "&daterange=1" : "");
+    }
   },
   {
-    name: "Upwork",
-    build: (q) => `https://www.upwork.com/nx/search/jobs/?q=${encodeURIComponent(q)}`
+    name: "Kalibrr (Philippines)",
+    url: "https://www.kalibrr.com"
+  },
+  {
+    name: "LinkedIn Jobs",
+    build: (q, fresh) => `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(q + " remote")}` + (fresh ? "&f_TPR=r86400" : "")
   },
   {
     name: "Fiverr",
@@ -180,7 +183,7 @@ const otherSelect = document.getElementById("otherSelect");
 const otherGo = document.getElementById("otherGo");
 
 // Quick-pick buttons
-const quick = ["virtual assistant", "data entry", "admin assistant", "customer support"];
+const quick = ["virtual assistant", "data entry", "admin assistant", "executive assistant"];
 chipsDiv.innerHTML = quick.map(t => `<button type="button" data-role="${t}">${t}</button>`).join("");
 chipsDiv.addEventListener("click", e => {
   if (e.target.dataset.role) {
@@ -196,7 +199,7 @@ function currentRole() {
 function renderBoards() {
   const q = currentRole();
   const fresh = freshBox.checked;
-  boardsDiv.innerHTML = topBoards.map((b, i) => `
+  boardsDiv.innerHTML = topBoards.map(b => `
     <div class="board">
       <div><strong>${b.name}</strong><small>${b.note}</small></div>
       <a class="btn" href="${b.build(q, fresh)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Search</a>

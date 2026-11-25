@@ -125,10 +125,10 @@ const otherSites = [
       return `https://ph.jobstreet.com/${slug}-jobs/in-Philippines/remote?keywords=${encodeURIComponent(q)}&worktype=242%2C243` + (fresh ? "&daterange=1" : "");
     }
   },
- {
-  name: "Kalibrr (Philippines)",
-  build: (q) => `https://www.kalibrr.com/home/te/${q.trim().replace(/\s+/g, "-")}/l/Manila/1`
-},
+  {
+    name: "Kalibrr (Philippines)",
+    build: (q) => `https://www.kalibrr.com/home/te/${q.trim().replace(/\s+/g, "-")}/l/Manila/1`
+  },
   {
     name: "LinkedIn Jobs",
     build: (q, fresh) => `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(q + " remote")}` + (fresh ? "&f_TPR=r86400" : "")

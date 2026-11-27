@@ -49,6 +49,7 @@
   }
   .other { display: flex; gap: 8px; align-items: center; }
   .other select { flex: 1 1 auto; }
+  .note { font-size: 0.8rem; color: var(--muted); margin: 6px 0 0; }
   footer { margin-top: 12px; font-size: 0.85rem; color: var(--muted); }
 </style>
 </head>
@@ -70,13 +71,14 @@
 <h2>Top job boards</h2>
 <div id="boards"></div>
 
-<h2>Other sites</h2>
+<h2>All other sites</h2>
 <div class="other">
-  <select id="otherSelect" aria-label="Other sites">
+  <select id="otherSelect" aria-label="All other sites">
     <option value="">Choose a site...</option>
   </select>
   <button class="btn" id="otherGo" type="button">Open</button>
 </div>
+<p class="note">Facebook groups and some Philippine startups aren't listed here, since they have no direct link. Search for them on Facebook.</p>
 
 <footer>
   Never pay a fee to apply, for training, or for equipment. Confirm a job is still listed before you apply.
@@ -104,64 +106,82 @@ const topBoards = [
   }
 ];
 
-// Everything else, shown in the dropdown. build() = search link; url = home page.
-const otherSites = [
+// Dropdown, grouped. A site has build(q, fresh) for a search link, or url for a home page.
+const otherGroups = [
   {
-    name: "JobStreet (Philippines)",
-    build: (q, fresh) => {
-      const slug = q.trim().replace(/\s+/g, "-");
-      return `https://ph.jobstreet.com/${slug}-jobs/in-Philippines/remote?keywords=${encodeURIComponent(q)}&worktype=242%2C243` + (fresh ? "&daterange=1" : "");
-    }
+    label: "Philippine job boards",
+    sites: [
+      {
+        name: "JobStreet",
+        build: (q, fresh) => {
+          const slug = q.trim().replace(/\s+/g, "-");
+          return `https://ph.jobstreet.com/${slug}-jobs/in-Philippines/remote?keywords=${encodeURIComponent(q)}&worktype=242%2C243` + (fresh ? "&daterange=1" : "");
+        }
+      },
+      { name: "Kalibrr", build: (q) => `https://www.kalibrr.com/home/te/${q.trim().replace(/\s+/g, "-")}/l/Manila/1` },
+      { name: "Galasya (early stage)", url: "https://galasya.com" },
+      { name: "WheretoFindVA (early stage)", url: "https://wheretofindva.com" },
+      { name: "Bestjobs.ph", url: "https://www.bestjobs.ph" },
+      { name: "Remotejobify (remote, hiring in PH)", url: "https://www.remotejobify.com" },
+      { name: "FindRemote.ph", url: "https://findremote.ph" }
+    ]
   },
   {
-    name: "Kalibrr (Philippines)",
-    build: (q) => `https://www.kalibrr.com/home/te/${q.trim().replace(/\s+/g, "-")}/l/Manila/1`
+    label: "Remote and global job boards",
+    sites: [
+      { name: "LinkedIn Jobs", build: (q, fresh) => `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(q + " remote")}` + (fresh ? "&f_TPR=r86400" : "") },
+      { name: "RemoteOK", build: (q) => `https://remoteok.com/remote-${q.trim().replace(/\s+/g, "-")}-jobs` },
+      { name: "WeWorkRemotely", url: "https://weworkremotely.com" },
+      { name: "FlexJobs", url: "https://www.flexjobs.com" },
+      { name: "Remote.co", url: "https://remote.co" },
+      { name: "Working Nomads", url: "https://www.workingnomads.com/jobs" },
+      { name: "Hiring Cafe", url: "https://hiring.cafe" },
+      { name: "PowerToFly", url: "https://powertofly.com/jobs/?location=Remote" },
+      { name: "Wellfound", url: "https://wellfound.com/remote" },
+      { name: "Nodesk", url: "https://nodesk.co/remote-jobs/" },
+      { name: "Citizen Remote", url: "https://citizenremote.com/digital-nomad-jobs/" },
+      { name: "Job Board Search", url: "https://jobboardsearch.com" },
+      { name: "Inten.app", url: "https://inten.app" },
+      { name: "YouTube Jobs", url: "https://ytjobs.co" },
+      { name: "Glassdoor", url: "https://www.glassdoor.com" }
+    ]
   },
   {
-    name: "LinkedIn Jobs",
-    build: (q, fresh) => `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(q + " remote")}` + (fresh ? "&f_TPR=r86400" : "")
+    label: "Freelance and gig platforms",
+    sites: [
+      { name: "Fiverr", url: "https://www.fiverr.com" },
+      { name: "BEwriters", url: "https://bewriters.net" },
+      { name: "Studypool (tutoring and study help)", url: "https://www.studypool.com" },
+      { name: "Course Hero (tutoring)", url: "https://www.coursehero.com" }
+    ]
   },
   {
-    name: "Fiverr",
-    url: "https://www.fiverr.com"
+    label: "Data, transcription, and project work",
+    sites: [
+      { name: "Hubstaff Talent (login required)", url: "https://talent.hubstaff.com" },
+      { name: "Appen (qualification test required)", url: "https://appen.com/careers" },
+      { name: "GoTranscript (transcription, paid per job)", url: "https://gotranscript.com" },
+      { name: "Innodata (data labelling)", url: "https://innodata.com/careers" }
+    ]
   },
   {
-    name: "RemoteOK",
-    build: (q) => `https://remoteok.com/remote-${q.trim().replace(/\s+/g, "-")}-jobs`
-  },
-  {
-    name: "WeWorkRemotely",
-    url: "https://weworkremotely.com"
-  },
-  {
-    name: "Remotejobify (remote, hiring in PH)",
-    url: "https://www.remotejobify.com"
-  },
-  {
-    name: "FindRemote.ph",
-    url: "https://findremote.ph"
-  },
-  {
-    name: "Bestjobs.ph",
-    url: "https://www.bestjobs.ph"
-  },
-  {
-    name: "Hubstaff Talent (login required)",
-    url: "https://talent.hubstaff.com"
-  },
-  {
-    name: "Appen (qualification test required)",
-    url: "https://appen.com/careers"
-  },
-  {
-    name: "GoTranscript (transcription, paid per job)",
-    url: "https://gotranscript.com"
-  },
-  {
-    name: "Innodata (data labelling)",
-    url: "https://innodata.com/careers"
+    label: "Reddit (check each sub's rules before posting)",
+    sites: [
+      { name: "r/phjobs", url: "https://www.reddit.com/r/phjobs" },
+      { name: "r/phclassifieds", url: "https://www.reddit.com/r/phclassifieds" },
+      { name: "r/workonline", url: "https://www.reddit.com/r/workonline" },
+      { name: "r/forhire", url: "https://www.reddit.com/r/forhire" },
+      { name: "r/freelance_forhire", url: "https://www.reddit.com/r/freelance_forhire" },
+      { name: "r/slavelabour", url: "https://www.reddit.com/r/slavelabour" },
+      { name: "r/hireawriter", url: "https://www.reddit.com/r/hireawriter" },
+      { name: "r/DesignJobs", url: "https://www.reddit.com/r/DesignJobs" },
+      { name: "r/gameDevClassifieds", url: "https://www.reddit.com/r/gameDevClassifieds" }
+    ]
   }
 ];
+
+// Flatten the groups so each option has a simple index.
+const otherSites = otherGroups.flatMap(g => g.sites);
 
 const roleInput = document.getElementById("role");
 const freshBox = document.getElementById("fresh");
@@ -169,6 +189,13 @@ const boardsDiv = document.getElementById("boards");
 const chipsDiv = document.getElementById("chips");
 const otherSelect = document.getElementById("otherSelect");
 const otherGo = document.getElementById("otherGo");
+
+// Build the grouped dropdown once.
+let idx = 0;
+otherSelect.insertAdjacentHTML("beforeend", otherGroups.map(g => `
+  <optgroup label="${g.label}">
+    ${g.sites.map(s => `<option value="${idx++}">${s.name}</option>`).join("")}
+  </optgroup>`).join(""));
 
 // Quick-pick buttons
 const quick = ["virtual assistant", "data entry", "admin assistant", "executive assistant"];
@@ -193,10 +220,6 @@ function renderBoards() {
       <a class="btn" href="${b.build(q, fresh)}" target="_blank" rel="noopener noreferrer">Search</a>
     </div>`).join("");
 }
-
-// Dropdown options are built once; the URL is resolved when the user clicks Open.
-otherSelect.insertAdjacentHTML("beforeend",
-  otherSites.map((s, i) => `<option value="${i}">${s.name}</option>`).join(""));
 
 otherGo.addEventListener("click", () => {
   const site = otherSites[otherSelect.value];
